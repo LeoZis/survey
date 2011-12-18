@@ -109,6 +109,7 @@ class QuestionCreate(webapp2.RequestHandler):
 				quest = Question.all().filter('question = ', questionStr).get()
 				questID = quest.key().id()
 				self.response.out.write("""<br /> <form action="/choice" method="post">""")
+				
 				for i in range(0,choiceNum):
 					self.response.out.write("""<div>Choice: <input type = "text" size = "100" name="choice"></input></div><br />""")
 				
@@ -123,9 +124,18 @@ class QuestionCreate(webapp2.RequestHandler):
 				
 class ChoiceCreate(webapp2.RequestHandler):
 	def post(self):
-		questid = cgi.escape(self.request.get('questid'))
-		self.response.out.write(questid)
-
+		questid = int(cgi.escape(self.request.get('questid')))
+		quest = Question.get_by_id(questid)
+		choiceStrs = self.request.get_all('choice')
+		for choiceStr in choiceStrs:
+			Choice(question=quest,
+				choice=choiceStr,
+				votes=0).put()
+		choices = db.GqlQuery("SELECT * "
+							"FROM Choice")
+		for choice in choices:
+			self.response.out.write(choice.choice)
+		
 app = webapp2.WSGIApplication([('/', MainPage),
 							 ('/survey', SurveyCreateOrEdit),
 							 ('/question', QuestionCreate),
