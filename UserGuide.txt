@@ -1,5 +1,9 @@
 Leonid Zis - Final Project - N13521535
 
+Important: I was not able to deploy this using AppEngine, But it ran successfully on my localhost:8080
+
+Also, I did this on my windows machine so I did not figure out how to use the supplied commands to get my .git respository. However I uploaded the project to GitHub. The URL is: https://github.com/LeoZis/survey
+
 To use this application:
 -User must be logged in, if he is not, it will direct him to the login page.
 -User is presented with a "main page" which holds:
