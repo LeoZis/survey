@@ -1,0 +1,20 @@
+Leonid Zis - Final Project
+The application was made using app engines datastore and user features.
+I have 3 models: Survey, Question and choices
+-Survey contains the name of the survey
+-Questions contain the question text
+-Choices contain the choice text and number of votes associated with it
+I have a "one-to-many" relationship between surveys and questions, and also between questions and choices.
+This allows me to loop through a surveys questions simply by saying "for questions in survey.questions:"  and similarly for choices.
+
+The app has 7 pages (each page has its own class within one file called "survey.py"). 
+-the main page contains the check to see if a user is logged in, and also the form to create/edit a survey
+-the survey create/edit page contains a check to see if that survey has already been created, and if it has, it will retrieve it, so you may edit it and  apply "put()" in order to update the survey.
+-the question create page has a form to get the question and number of choices so that I may display the correct number of text boxes for the user
+- the choice create page simply takes the choices in the text boxes on the previous page, and creates new choice records to put() in. It will correlate these choices according to the question. I do this by doing:
+Choice(question=quest,choice=choiceStr,votes=0).put()
+-in the vote page, if a "questPickedID" is not supplied in the request, that means a question to vote on has not been picked, so we loop through the questions and display them. A user can then click on a question in which case the "questPickedID" will be there, and the list of choices can then be displayed. Once the user picks a choice, he is taken to the "ChoiceVoted" page
+-the choice voted page simply updates the votes counter for that choice, and displays results for the question
+-the results page simply has a double loop, which will loop through all questions and choices to display the results for that survey.
+
+Note: To pass along important information between page refreshes (like the survey, question, and choices), I keep those variables in hidden fields in the forms which I then retrieve.

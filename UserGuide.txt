@@ -1,0 +1,37 @@
+Leonid Zis - Final Project - N13521535
+
+To use this application:
+-User must be logged in, if he is not, it will direct him to the login page.
+-User is presented with a "main page" which holds:
+	-text box to create a new survey with.
+	-surveys that have already been created are shown above this text box
+
+To create surveys / questions:
+Fill in a survey name in the text box in the main page. You will be taken to a page where you fill in your question and the number of choices.
+You then click the submit button to fill in your choices.
+
+After filling in your choices, your question is submitted and you make click the "Create Another Question" link to enter another question.
+You may also Go Back to the main page from the "create question" page if you do not want to add another question
+
+To edit surveys:
+You can add another question to a survey by entering its name into the "create/edit" text box in the main page.
+
+To vote on a survey:
+Surveys are displayed in the main page. to vote on a survey, click the vote button underneath the survey name.
+You are then taken to a page that will list all the questions in the survey. You may select which ever question you want to vote on and click on the vote button next to it.
+You then can select your choice for that question and click vote. The results for that question are then displayed. (you may then click the back button to go back)
+
+To view results of a survey:
+Click the results button under a survey on the main page to view the results of the survey
+
+List of features completed:
+-Creating survey
+-editing a survey by adding additional questions to it
+-voting on a survey
+-choosing which questions you would like to vote on
+-viewing results of entire survey
+-you cannot edit a survey of another user
+-surveys are associated with the user who made them
+-ability to browse other users surveys (all surveys are listed on main page along with who created them)
+
+
