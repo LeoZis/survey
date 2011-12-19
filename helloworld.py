@@ -36,16 +36,20 @@ class MainPage(webapp2.RequestHandler):
 							  )
 
 		for survey in surveys:
-			self.response.out.write(
-				'<b>%s</b> Survey:' % survey.author.nickname())
-			self.response.out.write(' %s <br />' %
-								  cgi.escape(survey.name))
+			self.response.out.write("""
+				<div style="border:solid 1px"><b>%s</b> Survey:""" % survey.author.nickname())
+			self.response.out.write(""" %s <form action="/vote" method="post">
+									<input type = "hidden" name="survName" value="%s"></input>
+									<input type="submit" value="Vote"></form> """ % (cgi.escape(survey.name),cgi.escape(survey.name)))
+			self.response.out.write("""<form action="/results" method="post">
+									<input type = "hidden" name="survName" value="%s"></input>
+									<input type="submit" value="Results"></form></div> """ % cgi.escape(survey.name))
 		
 		self.response.out.write('<hr>')
 		self.response.out.write("""
 			  <form action="/survey" method="get">
-				<div><input type = "text" name="name"></input></div>
-				<div><input type="submit" value="Create Survey"></div>
+				<div>Edit or Create a Survey<input type = "text" name="name"></input></div>
+				<div><input type="submit" value="Create/Edit Survey"></div>
 			  </form>
 			</body>
 		  </html>""")
@@ -76,7 +80,7 @@ class SurveyCreateOrEdit(webapp2.RequestHandler):
 				surveyAuth = survey.author
 				#you are only allowed to edit your own survey
 				if surveyAuth == user:
-					self.response.out.write(""" <h3>You have entered an existing survey (%s). To add a question to it, fill in the question and how many choices it will have. </h3> Or <a href="%s">Go Back</a><br />""" % (survey.name ,self.request.path))
+					self.response.out.write(""" <h3>You have entered an existing survey (%s). To add a question to it, fill in the question and how many choices it will have. </h3> Or <a href="%s">Go Back</a><br />""" % (survey.name ,self.request.host_url))
 					self.response.out.write("""
 						<br />
 						<form action="/question" method="post">
@@ -127,17 +131,67 @@ class ChoiceCreate(webapp2.RequestHandler):
 		questid = int(cgi.escape(self.request.get('questid')))
 		quest = Question.get_by_id(questid)
 		choiceStrs = self.request.get_all('choice')
+		survName = cgi.escape(self.request.get('survName'))
 		for choiceStr in choiceStrs:
 			Choice(question=quest,
 				choice=choiceStr,
 				votes=0).put()
 		choices = db.GqlQuery("SELECT * "
 							"FROM Choice")
-		for choice in choices:
-			self.response.out.write(choice.choice)
+		self.response.out.write("""Submitted question. <a href="%s/survey?name=%s">Create Another Question</a>""" % (self.request.host_url, survName))
+
+class Vote(webapp2.RequestHandler):
+	def post(self):
+		survName = cgi.escape(self.request.get('survName'))
+		surv = Survey.all().filter('name = ', survName).get()
+		questPickedID = cgi.escape(self.request.get('questId'))
+		
+		if questPickedID:
+			quest = Question.get_by_id(int(questPickedID))
+			self.response.out.write("""<h3>%s</h3>""" % quest.question) 
+			for choice in quest.choices:
+				choiceId = choice.key().id()
+				self.response.out.write("""
+					<form action="/voted" method="post">
+						<input type = "hidden" name="survName" value="%s"></input>
+						<input type="radio" name="choice" value="%s" /> %s <br />
+					""" % (survName, choiceId, choice.choice))
+			self.response.out.write("""<input type="submit" value="Vote"></form>""")
+			self.response.out.write("""Click to go back to questions page:
+									<form "/vote" method="post">
+										<input type = "hidden" name="survName" value="%s"></input>
+										<input type="submit" value="Back"></form>""" % survName)
+		else:
+			for quest in surv.questions:
+				questID = quest.key().id()
+				self.response.out.write("""<h4>Vote on: %s
+										<form action="/vote" method="post">
+										<input type = "hidden" name="survName" value="%s"></input>
+										<input type = "hidden" name="questId" value="%s"></input>
+										<input type="submit" value="Vote">
+										</form></h4>""" % (quest.question, survName ,questID))
+			self.response.out.write("""<p>Go back to main page: <a href="%s">Go Back</a></p>""" % self.request.host_url)
+
+class ChoiceVoted(webapp2.RequestHandler):
+	def post(self):
+		choiceId = self.request.get('choice')
+		survName = self.request.get('survName')
+		choice = Choice.get_by_id(int(choiceId))
+		if choiceId:
+			self.response.out.write("""You have chosen: %s""" % choice.choice)
+			choice.votes += 1
+			choice.put()
+			self.response.out.write("""<p>Click to go back to questions page:
+									<form action="/vote" method="post">
+										<input type = "hidden" name="survName" value="%s"></input>
+										<input type="submit" value="Back"></form></p>""" % survName)
+		else:
+			self.response.out.write('No choices have been selected')
 		
 app = webapp2.WSGIApplication([('/', MainPage),
 							 ('/survey', SurveyCreateOrEdit),
 							 ('/question', QuestionCreate),
-							 ('/choice', ChoiceCreate)],
+							 ('/choice', ChoiceCreate),
+							 ('/vote', Vote),
+							 ('/voted', ChoiceVoted)],
                               debug=True)
