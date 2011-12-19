@@ -154,8 +154,9 @@ class Vote(webapp2.RequestHandler):
 				self.response.out.write("""
 					<form action="/voted" method="post">
 						<input type = "hidden" name="survName" value="%s"></input>
+						<input type = "hidden" name="questId" value="%s"></input>
 						<input type="radio" name="choice" value="%s" /> %s <br />
-					""" % (survName, choiceId, choice.choice))
+					""" % (survName, questPickedID, choiceId, choice.choice))
 			self.response.out.write("""<input type="submit" value="Vote"></form>""")
 			self.response.out.write("""Click to go back to questions page:
 									<form "/vote" method="post">
@@ -175,23 +176,41 @@ class Vote(webapp2.RequestHandler):
 class ChoiceVoted(webapp2.RequestHandler):
 	def post(self):
 		choiceId = self.request.get('choice')
+		questId = self.request.get('questId')
 		survName = self.request.get('survName')
 		choice = Choice.get_by_id(int(choiceId))
+		quest = Question.get_by_id(int(questId))
 		if choiceId:
 			self.response.out.write("""You have chosen: %s""" % choice.choice)
 			choice.votes += 1
 			choice.put()
-			self.response.out.write("""<p>Click to go back to questions page:
+			self.response.out.write("<p><ul>")
+			for choice in quest.choices:
+				self.response.out.write("""<li>%s : %s</li>""" % (choice.choice, choice.votes))
+			self.response.out.write("""</p></ul><p>Click to go back to questions page:
 									<form action="/vote" method="post">
 										<input type = "hidden" name="survName" value="%s"></input>
 										<input type="submit" value="Back"></form></p>""" % survName)
 		else:
 			self.response.out.write('No choices have been selected')
+			
+class Results(webapp2.RequestHandler):
+	def post(self):
+		survName = self.request.get('survName')
+		surv = Survey.all().filter('name = ', survName).get()
+		for question in surv.questions:
+			self.response.out.write("""<h3>%s</h3><ul>""" % question.question)
+			for choice in question.choices:
+				self.response.out.write("""<li>%s : %s</li>""" % (choice.choice, choice.votes))
+			self.response.out.write("</ul>")
+		self.response.out.write("""<p>Go back to main page: <a href="%s">Go Back</a></p>""" % self.request.host_url)
+		
 		
 app = webapp2.WSGIApplication([('/', MainPage),
 							 ('/survey', SurveyCreateOrEdit),
 							 ('/question', QuestionCreate),
 							 ('/choice', ChoiceCreate),
 							 ('/vote', Vote),
-							 ('/voted', ChoiceVoted)],
+							 ('/voted', ChoiceVoted),
+							 ('/results', Results)],
                               debug=True)
